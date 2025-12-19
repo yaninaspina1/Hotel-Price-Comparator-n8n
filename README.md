@@ -90,40 +90,43 @@ Eje{
   "rating": 8.6,
   "link": "https://..."
 }
-##🔍 Lógica de comparación
+🔍 Lógica de comparación
 
-Normalización a:
+Se normalizan todos los precios a:
 
 Precio total de la estadía
 
-Misma moneda (si aplica conversión)
+Misma moneda
 
-Comparación considerando (según disponibilidad):
+Se comparan hoteles equivalentes según:
 
-Categoría (stars)
+Categoría (estrellas)
 
 Ubicación
 
-Condiciones similares (cancelación, desayuno, impuestos)
+Condiciones similares (si la fuente lo permite)
 
-Selección:
+Se ordenan por precio ascendente y se selecciona el mínimo.
 
-Orden por price_total ascendente
-
-Se devuelve el mínimo (y opcionalmente top N)
 ⚙️ Configuración
 
-Copiá env.example a .env y completá valores.
+Variables de entorno (ejemplo):
 
-Nota: en n8n también podés cargar esto desde Settings → Environment Variables o mediante Docker.
-▶️ Cómo ejecutar
-Opción 1: n8n local (UI)
+HOTEL_API_KEY=your_api_key_here
+HOTEL_API_HOST=api_provider_host
 
-Levantar n8n
 
-Importar el workflow desde workflows/hotel-price-comparator.json
+En n8n:
 
-Configurar credenciales / headers en los nodos HTTP
+Settings → Environment Variables
+o archivo .env si se usa Docker.
+
+▶️ Cómo ejecutar el proyecto
+Opción 1: n8n local
+
+Importar el workflow (.json)
+
+Configurar credenciales HTTP
 
 Activar el workflow
 
@@ -131,32 +134,21 @@ Consumir el webhook
 
 Opción 2: Docker (recomendado)
 docker run -it --rm \
-  --env-file .env \
   -p 5678:5678 \
+  -e N8N_BASIC_AUTH_ACTIVE=true \
+  -e N8N_BASIC_AUTH_USER=user \
+  -e N8N_BASIC_AUTH_PASSWORD=password \
   n8nio/n8n
-🧪 Probar el webhook (ejemplo)
 
-Reemplazá <WEBHOOK_URL> por la URL real de tu webhook (Test o Production):
-curl -X POST "<WEBHOOK_URL>" \
-  -H "Content-Type: application/json" \
-  -d '{
-    "city":"Iguazú",
-    "check_in":"2026-03-13",
-    "check_out":"2026-03-17",
-    "adults":2,
-    "rooms":1,
-    "stars":4,
-    "currency":"ARS"
-  }'
 📈 Próximas mejoras
 
 Top 5 hoteles más baratos
 
 Filtros avanzados (desayuno, cancelación gratuita)
 
-Historial y tracking de precios
+Comparación histórica de precios
 
-Notificaciones (WhatsApp / Email)
+Notificaciones por WhatsApp / Email
 
 Dashboard de consultas
 
@@ -167,9 +159,6 @@ Integración con frontend (React / Next.js)
 Yanina Spina
 Data Scientist | Data Engineer | Automation & n8n
 ETL · APIs · Cloud · Workflows
-
-
----
 
 ## env.example (listo)
 
