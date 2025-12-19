@@ -1,8 +1,8 @@
-# Hotel-Price-Comparator-n8n
+Hotel-Price-Comparator-n8n
 
 Proyecto de automatización construido con n8n que permite buscar, comparar precios de hoteles y devolver la opción más económica según destino, fechas y criterios definidos.
 
-El objetivo es funcionar como un metabuscador automatizado, integrando múltiples fuentes de datos de hoteles mediante APIs y normalizando la información para tomar la mejor decisión de precio.
+El objetivo es funcionar como un metabuscador automatizado, integrando múltiples fuentes de datos mediante APIs y normalizando la información para tomar la mejor decisión por precio.
 
 🚀 Funcionalidad principal
 
@@ -15,6 +15,10 @@ Fecha de check-in / check-out
 Cantidad de huéspedes
 
 Cantidad de habitaciones
+
+(Opcional) categoría de estrellas
+
+El flujo:
 
 Consulta múltiples proveedores de hoteles
 
@@ -35,31 +39,44 @@ Devuelve:
 (Opcional) Guarda historial de búsquedas
 
 🧱 Arquitectura del flujo (n8n)
+
 Webhook
-  ↓
-Set / Function (params)
-  ↓
+↓
+Set / Function (validación de parámetros)
+↓
 HTTP Request – Proveedor 1
-  ↓
+↓
 HTTP Request – Proveedor 2
-  ↓
+↓
 Merge
-  ↓
-Function (normalización y comparación)
-  ↓
+↓
+Function (normalización + comparación)
+↓
 Respond to Webhook
 
 🛠️ Tecnologías utilizadas
 
 n8n – Orquestación y automatización
 
-HTTP Request Nodes – Consumo de APIs
+HTTP Request – Consumo de APIs
 
 JavaScript (Function Node) – Normalización y lógica de comparación
 
-APIs de hoteles (ej: RapidAPI, Amadeus, etc.)
+APIs de hoteles (ej: Amadeus / RapidAPI / SerpApi / etc.)
 
 Docker (opcional, recomendado para producción)
+
+🔌 Fuentes de datos (proveedores)
+
+Definir acá tus fuentes reales para que el repo quede “cerrado”.
+
+Ejemplo:
+
+Proveedor 1: Amadeus Hotel Search / Hotel Offers API
+
+Proveedor 2: SerpApi / SearchAPI (Google Hotels)
+
+(Opcional) Proveedor 3: Booking / Expedia Rapid (si tenés credenciales partner)
 
 📥 Entrada esperada (Webhook)
 
@@ -67,8 +84,8 @@ Ejemplo de payload JSON:
 
 {
   "city": "Iguazú",
-  "check_in": "2025-03-13",
-  "check_out": "2025-03-17",
+  "check_in": "2026-03-13",
+  "check_out": "2026-03-17",
   "adults": 2,
   "rooms": 1,
   "stars": 4
@@ -89,24 +106,30 @@ Ejemplo de respuesta:
 
 🔍 Lógica de comparación
 
-Se normalizan todos los precios a:
+Normalización a:
 
 Precio total de la estadía
 
-Misma moneda
+Misma moneda (si aplica conversión)
 
-Se comparan hoteles equivalentes según:
+Comparación considerando (según disponibilidad de datos):
 
 Categoría (estrellas)
 
 Ubicación
 
-Condiciones similares
+Condiciones similares (ej: cancelación, desayuno, impuestos)
 
-Se ordenan por precio ascendente y se selecciona el mínimo
+Selección:
+
+Orden por price_total ascendente
+
+Se devuelve el mínimo (y opcionalmente top N)
 
 ⚙️ Configuración
-Variables de entorno (ejemplo)
+
+Variables de entorno (ejemplo):
+
 HOTEL_API_KEY=your_api_key_here
 HOTEL_API_HOST=api_provider_host
 
@@ -114,15 +137,14 @@ HOTEL_API_HOST=api_provider_host
 En n8n:
 
 Settings → Environment Variables
-
-O archivo .env si se usa Docker
+o .env si se usa Docker.
 
 ▶️ Cómo ejecutar el proyecto
 Opción 1: n8n local
 
 Importar el workflow (.json)
 
-Configurar credenciales HTTP
+Configurar credenciales / headers en los nodos HTTP
 
 Activar el workflow
 
