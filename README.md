@@ -90,7 +90,7 @@ Eje{
   "rating": 8.6,
   "link": "https://..."
 }
-🔍 Lógica de comparación
+##🔍 Lógica de comparación
 
 Normalización a:
 
