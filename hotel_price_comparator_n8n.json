@@ -1,0 +1,203 @@
+{
+  "name": "Hotel Price Comparator MVP",
+  "nodes": [
+    {
+      "parameters": {
+        "httpMethod": "POST",
+        "path": "compare-hotels",
+        "responseMode": "lastNode"
+      },
+      "id": "Webhook",
+      "name": "Webhook Input",
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 1,
+      "position": [
+        200,
+        300
+      ]
+    },
+    {
+      "parameters": {
+        "values": {
+          "string": [
+            {
+              "name": "city",
+              "value": "={{$json[\"city\"]}}"
+            },
+            {
+              "name": "check_in",
+              "value": "={{$json[\"check_in\"]}}"
+            },
+            {
+              "name": "check_out",
+              "value": "={{$json[\"check_out\"]}}"
+            }
+          ],
+          "number": [
+            {
+              "name": "adults",
+              "value": "={{$json[\"adults\"]}}"
+            },
+            {
+              "name": "rooms",
+              "value": "={{$json[\"rooms\"]}}"
+            }
+          ]
+        }
+      },
+      "id": "SetParams",
+      "name": "Set Search Params",
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 2,
+      "position": [
+        420,
+        300
+      ]
+    },
+    {
+      "parameters": {
+        "url": "https://api.provider1.com/hotels/search",
+        "method": "GET",
+        "responseFormat": "json"
+      },
+      "id": "Provider1",
+      "name": "Hotel Provider 1",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 2,
+      "position": [
+        650,
+        180
+      ]
+    },
+    {
+      "parameters": {
+        "url": "https://api.provider2.com/hotels/search",
+        "method": "GET",
+        "responseFormat": "json"
+      },
+      "id": "Provider2",
+      "name": "Hotel Provider 2",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 2,
+      "position": [
+        650,
+        420
+      ]
+    },
+    {
+      "parameters": {
+        "mode": "append"
+      },
+      "id": "Merge",
+      "name": "Merge Results",
+      "type": "n8n-nodes-base.merge",
+      "typeVersion": 2,
+      "position": [
+        900,
+        300
+      ]
+    },
+    {
+      "parameters": {
+        "functionCode": "const hotels = items.map(item => ({\n  name: item.json.hotel_name || 'Hotel Demo',\n  price: Number(item.json.price_total || 0),\n  provider: item.json.provider || 'Unknown',\n  link: item.json.link || ''\n}));\n\nhotels.sort((a, b) => a.price - b.price);\n\nreturn [{ json: hotels[0] }];"
+      },
+      "id": "Compare",
+      "name": "Compare Prices",
+      "type": "n8n-nodes-base.function",
+      "typeVersion": 2,
+      "position": [
+        1130,
+        300
+      ]
+    },
+    {
+      "parameters": {
+        "responseData": "={{$json}}"
+      },
+      "id": "Response",
+      "name": "Respond Webhook",
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1,
+      "position": [
+        1350,
+        300
+      ]
+    }
+  ],
+  "connections": {
+    "Webhook Input": {
+      "main": [
+        [
+          {
+            "node": "Set Search Params",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Set Search Params": {
+      "main": [
+        [
+          {
+            "node": "Hotel Provider 1",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Hotel Provider 2",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Hotel Provider 1": {
+      "main": [
+        [
+          {
+            "node": "Merge Results",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Hotel Provider 2": {
+      "main": [
+        [
+          {
+            "node": "Merge Results",
+            "type": "main",
+            "index": 1
+          }
+        ]
+      ]
+    },
+    "Merge Results": {
+      "main": [
+        [
+          {
+            "node": "Compare Prices",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Compare Prices": {
+      "main": [
+        [
+          {
+            "node": "Respond Webhook",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": false
+}
