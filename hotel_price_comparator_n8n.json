@@ -5,16 +5,18 @@
       "parameters": {
         "httpMethod": "POST",
         "path": "compare-hotels",
-        "responseMode": "lastNode"
+        "responseMode": "lastNode",
+        "options": {}
       },
-      "id": "Webhook",
+      "id": "1c9f8284-7331-420c-bc95-4fc5a1ad6a7e",
       "name": "Webhook Input",
       "type": "n8n-nodes-base.webhook",
       "typeVersion": 1,
       "position": [
-        200,
-        300
-      ]
+        -448,
+        128
+      ],
+      "webhookId": "1760268b-e0ae-4624-a9d7-1b243b222dc8"
     },
     {
       "parameters": {
@@ -43,87 +45,83 @@
               "value": "={{$json[\"rooms\"]}}"
             }
           ]
-        }
+        },
+        "options": {}
       },
-      "id": "SetParams",
+      "id": "7b456775-1339-4991-8e47-84aa06521b5b",
       "name": "Set Search Params",
       "type": "n8n-nodes-base.set",
       "typeVersion": 2,
       "position": [
-        420,
-        300
+        -224,
+        128
       ]
     },
     {
       "parameters": {
         "url": "https://api.provider1.com/hotels/search",
-        "method": "GET",
-        "responseFormat": "json"
+        "options": {}
       },
-      "id": "Provider1",
+      "id": "cfe7397a-2c46-4b95-a7cb-b37f07af0b66",
       "name": "Hotel Provider 1",
       "type": "n8n-nodes-base.httpRequest",
       "typeVersion": 2,
       "position": [
-        650,
-        180
+        0,
+        0
       ]
     },
     {
       "parameters": {
         "url": "https://api.provider2.com/hotels/search",
-        "method": "GET",
-        "responseFormat": "json"
+        "options": {}
       },
-      "id": "Provider2",
+      "id": "b8e422cb-4b8c-4937-b758-11c0cf9efd17",
       "name": "Hotel Provider 2",
       "type": "n8n-nodes-base.httpRequest",
       "typeVersion": 2,
       "position": [
-        650,
-        420
+        0,
+        240
       ]
     },
     {
-      "parameters": {
-        "mode": "append"
-      },
-      "id": "Merge",
+      "parameters": {},
+      "id": "ba5cad7a-03f0-4a8b-a7f6-24fe6b3aa924",
       "name": "Merge Results",
       "type": "n8n-nodes-base.merge",
       "typeVersion": 2,
       "position": [
-        900,
-        300
+        256,
+        128
       ]
     },
     {
-      "parameters": {
-        "functionCode": "const hotels = items.map(item => ({\n  name: item.json.hotel_name || 'Hotel Demo',\n  price: Number(item.json.price_total || 0),\n  provider: item.json.provider || 'Unknown',\n  link: item.json.link || ''\n}));\n\nhotels.sort((a, b) => a.price - b.price);\n\nreturn [{ json: hotels[0] }];"
-      },
-      "id": "Compare",
+      "parameters": {},
+      "id": "1ebcc192-9541-4e68-8a63-913911ffbcd7",
       "name": "Compare Prices",
       "type": "n8n-nodes-base.function",
       "typeVersion": 2,
       "position": [
-        1130,
-        300
+        480,
+        128
       ]
     },
     {
       "parameters": {
-        "responseData": "={{$json}}"
+        "options": {}
       },
-      "id": "Response",
+      "id": "a3c57a60-9868-42b7-82eb-f668e6c2a058",
       "name": "Respond Webhook",
       "type": "n8n-nodes-base.respondToWebhook",
       "typeVersion": 1,
       "position": [
-        1350,
-        300
+        704,
+        128
       ]
     }
   ],
+  "pinData": {},
   "connections": {
     "Webhook Input": {
       "main": [
@@ -143,9 +141,7 @@
             "node": "Hotel Provider 1",
             "type": "main",
             "index": 0
-          }
-        ],
-        [
+          },
           {
             "node": "Hotel Provider 2",
             "type": "main",
@@ -175,29 +171,17 @@
           }
         ]
       ]
-    },
-    "Merge Results": {
-      "main": [
-        [
-          {
-            "node": "Compare Prices",
-            "type": "main",
-            "index": 0
-          }
-        ]
-      ]
-    },
-    "Compare Prices": {
-      "main": [
-        [
-          {
-            "node": "Respond Webhook",
-            "type": "main",
-            "index": 0
-          }
-        ]
-      ]
     }
   },
-  "active": false
+  "active": false,
+  "settings": {
+    "executionOrder": "v1",
+    "availableInMCP": false
+  },
+  "versionId": "398e1be2-effd-41b8-98c0-76bb2e8990db",
+  "meta": {
+    "instanceId": "47cf59dc82f66a9f7fd10910a43bbab4041fe22254dbff9134f4f749129ae954"
+  },
+  "id": "AF24VFAiw9o7Oz7Vhb7Ul",
+  "tags": []
 }
