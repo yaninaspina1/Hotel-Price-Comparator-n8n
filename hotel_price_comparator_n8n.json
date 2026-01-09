@@ -1,22 +1,23 @@
+
 {
-  "name": "Hotel Price Comparator MVP",
+  "name": "Hotel Price Comparator MVP (returns cheapest)",
   "nodes": [
     {
       "parameters": {
         "httpMethod": "POST",
         "path": "compare-hotels",
-        "responseMode": "lastNode",
+        "responseMode": "responseNode",
         "options": {}
       },
-      "id": "1c9f8284-7331-420c-bc95-4fc5a1ad6a7e",
+      "id": "0f2b8b84-1cc4-4c2a-bc86-2b7fc3813be1",
       "name": "Webhook Input",
       "type": "n8n-nodes-base.webhook",
       "typeVersion": 1,
       "position": [
-        -448,
-        128
+        -320,
+        480
       ],
-      "webhookId": "1760268b-e0ae-4624-a9d7-1b243b222dc8"
+      "webhookId": "6c346892-0809-4bf8-a0a0-c8e2008ee61b"
     },
     {
       "parameters": {
@@ -24,104 +25,105 @@
           "string": [
             {
               "name": "city",
-              "value": "={{$json[\"city\"]}}"
+              "value": "={{$json.body.city}}"
             },
             {
               "name": "check_in",
-              "value": "={{$json[\"check_in\"]}}"
+              "value": "={{$json.body.check_in}}"
             },
             {
               "name": "check_out",
-              "value": "={{$json[\"check_out\"]}}"
+              "value": "={{$json.body.check_out}}"
             }
           ],
           "number": [
             {
               "name": "adults",
-              "value": "={{$json[\"adults\"]}}"
+              "value": "={{$json.body.adults ?? 2}}"
             },
             {
               "name": "rooms",
-              "value": "={{$json[\"rooms\"]}}"
+              "value": "={{$json.body.rooms ?? 1}}"
             }
           ]
         },
         "options": {}
       },
-      "id": "7b456775-1339-4991-8e47-84aa06521b5b",
+      "id": "d4b7a201-2534-4bf8-99af-e5c6d3d0451c",
       "name": "Set Search Params",
       "type": "n8n-nodes-base.set",
       "typeVersion": 2,
       "position": [
-        -224,
-        128
+        -80,
+        480
       ]
     },
     {
       "parameters": {
-        "url": "https://api.provider1.com/hotels/search",
-        "options": {}
+        "functionCode": "// MOCK Provider 1 (para probar sin APIs reales)\n// Reemplazalo luego por un HTTP Request con una API real\nconst city = $json.city;\nreturn [\n  { json: { provider: \"P1\", hotel_name: `Hotel A (${city})`, currency: \"USD\", total_price: 420, booking_url: \"https://example.com/p1/a\" } },\n  { json: { provider: \"P1\", hotel_name: `Hotel B (${city})`, currency: \"USD\", total_price: 390, booking_url: \"https://example.com/p1/b\" } },\n];"
       },
-      "id": "cfe7397a-2c46-4b95-a7cb-b37f07af0b66",
-      "name": "Hotel Provider 1",
-      "type": "n8n-nodes-base.httpRequest",
+      "id": "c8a5b0d4-a147-4e3b-b9db-73a73d3d98a4",
+      "name": "Provider 1 (Mock)",
+      "type": "n8n-nodes-base.function",
       "typeVersion": 2,
       "position": [
-        0,
-        0
+        160,
+        360
       ]
     },
     {
       "parameters": {
-        "url": "https://api.provider2.com/hotels/search",
-        "options": {}
+        "functionCode": "// MOCK Provider 2 (para probar sin APIs reales)\nconst city = $json.city;\nreturn [\n  { json: { provider: \"P2\", hotel_name: `Hotel C (${city})`, currency: \"USD\", total_price: 410, booking_url: \"https://example.com/p2/c\" } },\n  { json: { provider: \"P2\", hotel_name: `Hotel D (${city})`, currency: \"USD\", total_price: 360, booking_url: \"https://example.com/p2/d\" } },\n];"
       },
-      "id": "b8e422cb-4b8c-4937-b758-11c0cf9efd17",
-      "name": "Hotel Provider 2",
-      "type": "n8n-nodes-base.httpRequest",
+      "id": "115022f9-4b52-46e2-a6a5-2e7390ff5a88",
+      "name": "Provider 2 (Mock)",
+      "type": "n8n-nodes-base.function",
       "typeVersion": 2,
       "position": [
-        0,
-        240
+        160,
+        600
       ]
     },
     {
-      "parameters": {},
-      "id": "ba5cad7a-03f0-4a8b-a7f6-24fe6b3aa924",
+      "parameters": {
+        "mode": "append"
+      },
+      "id": "a7fd54cd-28fa-4e40-9b85-e2172f0f4cfb",
       "name": "Merge Results",
       "type": "n8n-nodes-base.merge",
       "typeVersion": 2,
       "position": [
-        256,
-        128
+        440,
+        480
       ]
     },
     {
-      "parameters": {},
-      "id": "1ebcc192-9541-4e68-8a63-913911ffbcd7",
+      "parameters": {
+        "functionCode": "// Elige el hotel más barato del input (items ya normalizados)\n// Campos esperados: hotel_name, provider, currency, total_price (o price), booking_url\n\nfunction pickPrice(h) {\n  const candidates = [\n    h.total_price, h.totalPrice,\n    h.price, h.amount,\n    h.pricing?.total,\n    h.rate?.total,\n  ];\n  const v = candidates.find(x => x !== undefined && x !== null && x !== \"\");\n  if (v === undefined) return null;\n\n  const s = String(v).trim().replace(/[^\\d.,-]/g, \"\");\n  const normalized = (s.includes(\",\") && !s.includes(\".\"))\n    ? s.replace(\",\", \".\")\n    : s.replace(/,/g, \"\");\n  const n = Number(normalized);\n  return Number.isFinite(n) ? n : null;\n}\n\nconst hotels = $input.all().map(i => i.json);\nconst priced = hotels.map(h => ({...h, _price: pickPrice(h)})).filter(h => h._price !== null);\n\nif (priced.length === 0) {\n  return [{\n    json: {\n      status: \"error\",\n      message: \"No se encontraron precios válidos para comparar.\",\n      received_count: hotels.length,\n      sample: hotels.slice(0, 3),\n    }\n  }];\n}\n\npriced.sort((a,b) => a._price - b._price);\nconst winner = priced[0];\n\nreturn [{\n  json: {\n    status: \"ok\",\n    cheapest: {\n      hotel_name: winner.hotel_name || winner.name || \"Unknown\",\n      provider: winner.provider || winner.source || \"Unknown\",\n      currency: winner.currency || \"Unknown\",\n      total_price: winner._price,\n      booking_url: winner.booking_url || winner.url || null,\n    },\n    top5: priced.slice(0,5).map(h => ({\n      hotel_name: h.hotel_name || h.name || \"Unknown\",\n      provider: h.provider || h.source || \"Unknown\",\n      currency: h.currency || \"Unknown\",\n      total_price: h._price,\n      booking_url: h.booking_url || h.url || null,\n    })),\n    compared_count: priced.length\n  }\n}];"
+      },
+      "id": "d30f1896-8a79-4f68-acde-d1d4be15f1a8",
       "name": "Compare Prices",
       "type": "n8n-nodes-base.function",
       "typeVersion": 2,
       "position": [
-        480,
-        128
+        680,
+        480
       ]
     },
     {
       "parameters": {
         "options": {}
       },
-      "id": "a3c57a60-9868-42b7-82eb-f668e6c2a058",
+      "id": "9e7dfc2a-dba9-4ed8-8e7e-0f5cc5f32fba",
       "name": "Respond Webhook",
       "type": "n8n-nodes-base.respondToWebhook",
       "typeVersion": 1,
       "position": [
-        704,
-        128
+        920,
+        480
       ]
     }
   ],
-  "pinData": {},
   "connections": {
     "Webhook Input": {
       "main": [
@@ -138,19 +140,19 @@
       "main": [
         [
           {
-            "node": "Hotel Provider 1",
+            "node": "Provider 1 (Mock)",
             "type": "main",
             "index": 0
           },
           {
-            "node": "Hotel Provider 2",
+            "node": "Provider 2 (Mock)",
             "type": "main",
             "index": 0
           }
         ]
       ]
     },
-    "Hotel Provider 1": {
+    "Provider 1 (Mock)": {
       "main": [
         [
           {
@@ -161,7 +163,7 @@
         ]
       ]
     },
-    "Hotel Provider 2": {
+    "Provider 2 (Mock)": {
       "main": [
         [
           {
@@ -171,17 +173,36 @@
           }
         ]
       ]
+    },
+    "Merge Results": {
+      "main": [
+        [
+          {
+            "node": "Compare Prices",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Compare Prices": {
+      "main": [
+        [
+          {
+            "node": "Respond Webhook",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
     }
   },
   "active": false,
   "settings": {
-    "executionOrder": "v1",
-    "availableInMCP": false
+    "executionOrder": "v1"
   },
-  "versionId": "398e1be2-effd-41b8-98c0-76bb2e8990db",
+  "versionId": "17a4e6b5-8f18-4f71-82b9-2cf9ed0b819b",
   "meta": {
-    "instanceId": "47cf59dc82f66a9f7fd10910a43bbab4041fe22254dbff9134f4f749129ae954"
-  },
-  "id": "AF24VFAiw9o7Oz7Vhb7Ul",
-  "tags": []
+    "instanceId": "17d5ebd7-9c2d-4c55-bba2-479b9c0a2c60"
+  }
 }
